@@ -587,3 +587,9 @@ h1{font-size:clamp(40px,5.4vw,68px)}
 .hero.home .ratebar small{color:var(--graphite)}
 @media (max-width:820px){.hero.home .figures .grid{grid-template-columns:1fr 1fr;gap:20px}}
 @media (max-width:560px){.hero.home{padding-top:40px}}
+/* platform preview section on light */
+.washbg{background:var(--wash)}
+.washbg .badge.blue{background:#fff}
+.washbg .ui{box-shadow:0 30px 70px -24px rgba(37,64,255,.35)}
+.washbg .show .phone{box-shadow:0 30px 60px -14px rgba(11,12,14,.35)}
+.washbg .feat{border-top-color:var(--tint)}

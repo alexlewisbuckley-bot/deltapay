@@ -8,43 +8,47 @@
     mb.setAttribute('aria-expanded', open ? 'true' : 'false');
   });
 
-  // payment calculator
-  var calc = document.querySelector('[data-calc]');
-  if (calc) {
-    // AED is pegged to the US dollar at 3.6725. Other pairs are quoted live by the team.
-    var RATES = { AED: 3.6725, USD: 1 };
-    var state = { amount: 250000, asset: 'USDT', cur: 'AED' };
+  // payment calculators (hero quick quote and the larger one further down)
+  // PLACEHOLDER RATES: value of one unit in US dollars. AED is the official peg (3.6725).
+  // EUR and GBP are rough sample figures. Replace this table with the live pricing feed.
+  var USD_VALUE = { USDT: 1, USDC: 1, USD: 1, AED: 1 / 3.6725, EUR: 1 / 0.86, GBP: 1 / 0.75 };
+  var fmt = function (n) { return n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  var parse = function (v) { var n = parseFloat(String(v).replace(/[^0-9.]/g, '')); return isNaN(n) ? 0 : n; };
+  document.querySelectorAll('[data-calc]').forEach(function (calc) {
+    var amt = calc.querySelector('[data-amount]');
     var range = calc.querySelector('input[type=range]');
-    var send = calc.querySelector('[data-send]');
     var recv = calc.querySelector('[data-recv]');
     var rate = calc.querySelector('[data-rate]');
-    var fmt = function (n) { return n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+    var sendSel = calc.querySelector('select[data-send]');
+    var recvSel = calc.querySelector('select[data-recv-unit]');
+    var pressed = function (attr) { var b = calc.querySelector('[' + attr + '][aria-pressed=true]'); return b ? b.getAttribute(attr) : null; };
+    var units = function () { return { s: sendSel ? sendSel.value : pressed('data-asset'), r: recvSel ? recvSel.value : pressed('data-cur') }; };
     var draw = function () {
-      send.textContent = fmt(state.amount);
-      var r = RATES[state.cur];
-      if (r) {
-        recv.textContent = fmt(state.amount * r);
-        rate.textContent = 'Δ 1 ' + state.asset + ' = ' + r.toFixed(4) + ' ' + state.cur;
-      } else {
-        recv.textContent = 'Quoted live';
-        rate.textContent = 'Δ ' + state.asset + ' → ' + state.cur + ' on request';
+      var u = units(), n = parse(amt.value), r = USD_VALUE[u.s] / USD_VALUE[u.r];
+      recv.textContent = fmt(n * r);
+      rate.textContent = '\u0394 1 ' + u.s + ' = ' + r.toFixed(4) + ' ' + u.r;
+      if (range) {
+        range.value = Math.min(Math.max(n, +range.min), +range.max);
+        range.style.setProperty('--p', ((range.value - range.min) / (range.max - range.min) * 100) + '%');
       }
-      range.style.setProperty('--p', ((state.amount - range.min) / (range.max - range.min) * 100) + '%');
     };
-    range.addEventListener('input', function () { state.amount = +range.value; draw(); });
-    calc.querySelectorAll('[data-asset]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        state.asset = b.dataset.asset;
-        calc.querySelectorAll('[data-asset]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
-        draw();
-      });
+    amt.addEventListener('input', draw);
+    amt.addEventListener('focus', function () { amt.select(); });
+    amt.addEventListener('blur', function () { amt.value = fmt(parse(amt.value)); });
+    amt.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); amt.blur(); } });
+    if (range) range.addEventListener('input', function () { amt.value = fmt(+range.value); draw(); });
+    [sendSel, recvSel].forEach(function (s) { if (s) s.addEventListener('change', draw); });
+    ['data-asset', 'data-cur'].forEach(function (attr) {
+      var items = calc.querySelectorAll('[' + attr + ']');
+      items.forEach(function (b) { b.addEventListener('click', function () { items.forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); draw(); }); });
     });
-    calc.querySelectorAll('[data-cur]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        state.cur = b.dataset.cur;
-        calc.querySelectorAll('[data-cur]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
-        draw();
-      });
+    var swap = calc.querySelector('[data-swap]');
+    if (swap && sendSel && recvSel) swap.addEventListener('click', function () {
+      var a = sendSel.innerHTML, av = sendSel.value, bv = recvSel.value, out = parse(recv.textContent);
+      sendSel.innerHTML = recvSel.innerHTML; recvSel.innerHTML = a;
+      sendSel.value = bv; recvSel.value = av;
+      amt.value = fmt(out);
+      draw();
     });
     calc.querySelectorAll('[role=tab]').forEach(function (t) {
       t.addEventListener('click', function () {
@@ -53,7 +57,7 @@
       });
     });
     draw();
-  }
+  });
 
   // booking picker
   document.querySelectorAll('[data-booking]').forEach(function (bk) {

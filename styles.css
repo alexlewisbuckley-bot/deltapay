@@ -169,7 +169,8 @@ section{padding:112px 0}
 .browser img{width:100%}
 .stage{background:var(--paper);padding:64px 64px 0;position:relative;overflow:hidden;display:flex;align-items:flex-start;min-height:520px}
 .stage .browser{width:78%;border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom:0}
-.stage .phone{position:absolute;right:6%;top:12%;--w:min(22vw,264px)}
+.stage{--pw:min(22vw,264px);min-height:calc(var(--pw)*2.101 + 104px)}
+.stage .phone{position:absolute;right:6%;top:auto;bottom:40px;--w:var(--pw)}
 .feats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;margin-top:56px}
 .feat{border-top:1px solid var(--mist);padding-top:24px;display:flex;flex-direction:column;gap:10px}
 .feat.strong{border-top-color:var(--ink)}

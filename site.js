@@ -1,12 +1,34 @@
 // Delta Pay marketing site: small interactions only. No data leaves the page.
 (function () {
-  // mobile menu
+  // mobile menu: animated open and close, closes on link tap or Escape
   var nav = document.querySelector('.nav');
   var mb = document.querySelector('.menu-btn');
-  if (nav && mb) mb.addEventListener('click', function () {
-    var open = nav.classList.toggle('open');
+  var setMenu = function (open) {
+    nav.classList.toggle('open', open);
     mb.setAttribute('aria-expanded', open ? 'true' : 'false');
-  });
+    mb.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  };
+  if (nav && mb) {
+    mb.addEventListener('click', function () { setMenu(!nav.classList.contains('open')); });
+    nav.querySelectorAll('.nav-links a').forEach(function (a) { a.addEventListener('click', function () { setMenu(false); }); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+    // logo collapses to the monogram once the page is scrolled
+    var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 80); };
+    window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  }
+
+  // gentle reveal for things below the fold
+  if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.remove('pre'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    document.querySelectorAll('section .head, .pain>div, .cmp, .svc, .reverse, .steps>div, .calc, .show, .feats>*, .ind, .said blockquote, .booking, .flow>div, .faq details, .cards>*, .frow .vis, .frow .copy, .timeline>div, .rules>div, .facts>div, .cta-phones .phone').forEach(function (el) {
+      if (el.getBoundingClientRect().top < window.innerHeight) return;
+      var i = Array.prototype.indexOf.call(el.parentNode.children, el);
+      el.classList.add('rvl', 'pre'); el.style.transitionDelay = Math.min(i, 5) * 70 + 'ms';
+      io.observe(el);
+    });
+  }
 
   // payment calculators (hero quick quote and the larger one further down)
   // PLACEHOLDER RATES: value of one unit in US dollars. AED is the official peg (3.6725).
@@ -14,6 +36,7 @@
   var USD_VALUE = { USDT: 1, USDC: 1, USD: 1, AED: 1 / 3.6725, EUR: 1 / 0.86, GBP: 1 / 0.75 };
   var fmt = function (n) { return n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
   var parse = function (v) { var n = parseFloat(String(v).replace(/[^0-9.]/g, '')); return isNaN(n) ? 0 : n; };
+  document.querySelectorAll('[data-pair]').forEach(function (el) { var p = el.getAttribute('data-pair').split('/'); el.textContent = (USD_VALUE[p[0]] / USD_VALUE[p[1]]).toFixed(4); });
   document.querySelectorAll('[data-calc]').forEach(function (calc) {
     var amt = calc.querySelector('[data-amount]');
     var range = calc.querySelector('input[type=range]');

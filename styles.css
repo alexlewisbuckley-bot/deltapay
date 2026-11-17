@@ -580,3 +580,4 @@ h1{font-size:clamp(40px,5.4vw,68px)}
 @media (max-width:1040px){.cta.visual .stack{padding:64px 0 0}.cta-phones{height:300px;align-self:auto}}
 @media (max-width:820px){.dark .figures .grid{grid-template-columns:1fr 1fr;gap:20px}}
 @media (max-width:560px){.cta-phones{height:250px}}
+.cta.visual form.stack{padding:0}

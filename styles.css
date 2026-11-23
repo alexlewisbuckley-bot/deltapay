@@ -593,3 +593,6 @@ h1{font-size:clamp(40px,5.4vw,68px)}
 .washbg .ui{box-shadow:0 30px 70px -24px rgba(37,64,255,.35)}
 .washbg .show .phone{box-shadow:0 30px 60px -14px rgba(11,12,14,.35)}
 .washbg .feat{border-top-color:var(--tint)}
+.qc span{font-family:var(--sans)}
+.figures b{font-size:22px}
+footer .bottom span:first-child{font-family:var(--sans);font-size:13px;line-height:1.5}

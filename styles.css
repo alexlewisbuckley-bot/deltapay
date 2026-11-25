@@ -596,3 +596,5 @@ h1{font-size:clamp(40px,5.4vw,68px)}
 .qc span{font-family:var(--sans)}
 .figures b{font-size:22px}
 footer .bottom span:first-child{font-family:var(--sans);font-size:13px;line-height:1.5}
+.nav .logo{flex:none}
+@media (max-width:560px){.nav .logo{--fs:19px}.nav .wrap{gap:12px}}

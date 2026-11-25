@@ -1,0 +1,10 @@
+.adm-top{border-bottom:1px solid var(--mist);background:#fff}.adm-top .wrap{display:flex;align-items:center;gap:24px;min-height:72px}.adm-top .eyebrow{flex:1}
+.adm{padding-top:40px;padding-bottom:80px}
+.adm .gate{max-width:420px;margin:80px auto;display:flex;flex-direction:column;gap:16px}
+.adm table{width:100%;border-collapse:collapse;font-size:15px}.adm th{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--graphite);text-align:left;padding:10px 12px;border-bottom:1px solid var(--ink)}
+.adm td{padding:14px 12px;border-bottom:1px solid var(--mist);vertical-align:top}.adm tbody tr{cursor:pointer}.adm tbody tr:hover{background:var(--paper)}
+.adm .bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:16px;flex-wrap:wrap}
+.adm .det{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:24px}.adm .det>div{border:1px solid var(--mist);padding:18px 20px}
+.adm .det h4{margin:0 0 10px;font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--graphite)}
+.adm dl{margin:0;display:grid;grid-template-columns:150px 1fr;gap:6px 12px;font-size:14px}.adm dt{color:var(--graphite)}.adm dd{margin:0;overflow-wrap:anywhere}
+@media (max-width:820px){.adm .det{grid-template-columns:1fr}.adm th:nth-child(n+5),.adm td:nth-child(n+5){display:none}}

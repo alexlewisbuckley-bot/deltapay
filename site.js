@@ -1,4 +1,4 @@
-// Delta Pay marketing site: small interactions only. No data leaves the page.
+// Delta Bridge marketing site: small interactions only. No data leaves the page.
 (function () {
   // mobile menu: animated open and close, closes on link tap or Escape
   var nav = document.querySelector('.nav');

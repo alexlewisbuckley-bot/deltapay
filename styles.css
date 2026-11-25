@@ -356,7 +356,7 @@ h1{font-size:clamp(40px,5.4vw,68px)}
 
 /* nav: collapses to the monogram once scrolled */
 .nav .wrap{transition:min-height .3s cubic-bezier(.2,.7,.2,1)}
-.nav .logo{overflow:hidden;width:calc(var(--fs)*.92*1052/184);transition:width .45s cubic-bezier(.2,.7,.2,1)}
+.nav .logo{overflow:hidden;width:calc(var(--fs)*.92*1445/184);transition:width .45s cubic-bezier(.2,.7,.2,1)}
 .nav .logo svg{flex:none}
 .logo .rest{transition:opacity .25s}
 .nav.scrolled .wrap{min-height:60px}

@@ -1,4 +1,4 @@
-# Delta Pay marketing website
+# Delta Bridge marketing website
 
 Static site: four pages (Home, Platform, Team, Contact), no build step.
 

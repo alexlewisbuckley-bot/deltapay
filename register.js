@@ -21,14 +21,33 @@
   var GROUPS = [[0], [1, 2], [3], [4], [5, 6], [7]];
   var RAIL = [['You', 'Name and contact'], ['Company', 'Details and address'], ['What you need', 'Services and assets'], ['Payments', 'Where and how much'], ['Ownership and checks', 'Funds, owners, documents'], ['Review', 'Check and send']];
   var TOP = ['Step 1 of 6', 'Step 2 of 6 · part 1 of 2', 'Step 2 of 6 · part 2 of 2', 'Step 3 of 6', 'Step 4 of 6', 'Step 5 of 6 · part 1 of 2', 'Step 5 of 6 · part 2 of 2', 'Step 6 of 6 · last one'];
-  var DOCS = [['licence', 'Trade licence'], ['id', 'Passport or Emirates ID of one director'], ['address', 'Proof of address']];
+  // What changes with the country the company is registered in.
+  var PAYOUT = ['AED', 'USD', 'EUR', 'GBP'];
+  var CUR = { AE: 'AED', GB: 'GBP', US: 'USD', DE: 'EUR', FR: 'EUR', ES: 'EUR', IT: 'EUR', NL: 'EUR', IE: 'EUR', PT: 'EUR', BE: 'EUR', GR: 'EUR', CY: 'EUR', MT: 'EUR' };
+  var GENERIC = { legal: ['Private limited company', 'Public company', 'Partnership', 'Sole proprietor', 'Other'], num: 'Company registration number', doc: 'Company registration certificate',
+    id: 'Passport or national ID of one director', sub: 'Just the basics, as they appear on your company registration.', tip: 'The name, number and legal form are all on your company registration certificate.', post: 'Postcode (optional)' };
+  var GULF = { legal: ['Limited liability company', 'Free zone company', 'Branch of a foreign company', 'Sole establishment', 'Other'], num: 'Commercial registration number', doc: 'Commercial registration',
+    id: 'Passport or national ID of one director', sub: 'Just the basics, as they appear on your commercial registration.', tip: 'The name, number and legal form are all on your commercial registration.', post: 'P.O. Box (optional)' };
+  var PROF = {
+    AE: { legal: ['Free zone company', 'Mainland LLC', 'Offshore', 'Other'], num: 'Trade licence number', doc: 'Trade licence', id: 'Passport or Emirates ID of one director',
+      sub: 'Just the basics, as they appear on your trade licence.', tip: 'The name, number and legal form are all on the first page of your trade licence.', post: 'P.O. Box (optional)' },
+    GB: { legal: ['Private limited company (Ltd)', 'Public limited company (PLC)', 'Limited liability partnership (LLP)', 'Sole trader or partnership', 'Other'], num: 'Company number', doc: 'Certificate of incorporation',
+      id: 'Passport or driving licence of one director', sub: 'Just the basics, as they appear at Companies House.', tip: 'Your company number is on your certificate of incorporation and on the Companies House register.', post: 'Postcode' },
+    US: { legal: ['LLC', 'Corporation', 'Partnership', 'Sole proprietorship', 'Other'], num: 'EIN or state registration number', doc: 'Certificate of formation or incorporation',
+      id: 'Passport or driver’s license of one director', sub: 'Just the basics, as they appear on your formation documents.', tip: 'Your EIN is on the letter the IRS sent when the company was set up.', post: 'ZIP code' },
+    SA: GULF, QA: GULF, KW: GULF, BH: GULF, OM: GULF };
+  function prof(name) {
+    var c = CC.filter(function (x) { return x[1] === name; })[0] || CC[0], p = PROF[c[0]] || GENERIC, cur = CUR[c[0]];
+    return Object.assign({ code: c[0], cur: PAYOUT.indexOf(cur) > -1 ? cur : 'USD' }, p);
+  }
+  var docsList = function () { var p = prof(d.regCountry); return [['licence', p.doc], ['id', p.id], ['address', 'Proof of address']]; };
   var blank = function () {
     return { name: '', email: '', cc: 'AE', phone: '', reach: 'WhatsApp', regCountry: 'United Arab Emirates', company: '', licence: '', website: '', legal: '', sector: '',
       addr1: '', area: '', city: '', addrCountry: 'United Arab Emirates', pobox: '', services: [], coins: [], networks: [], payCountries: [], currencies: [], payee: '', typical: '', monthly: '', freq: '',
       source: '', sourceNote: '', owners: [{ name: '', role: 'Director', pct: '' }], pep: '', declare: false };
   };
   var d = blank(), meta = { id: null, ref: null, step: 0, status: 'draft', files: {} };
-  var tried = false, returnTo = null, view = 'form', sendError = '', call = { day: '', time: '', sent: false, err: '' };
+  var prevReg = 'United Arab Emirates', tried = false, returnTo = null, view = 'form', sendError = '', call = { day: '', time: '', sent: false, err: '' };
 
   // ---------- helpers ----------
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
@@ -126,27 +145,28 @@
       '<div class="errline">Enter your mobile number.</div><p class="hint">Pick your country code. The number formats itself as you type.</p></div>' +
       group('reach', 'How should we reach you?', chips('reach', ['WhatsApp', 'Phone call', 'Email'])) +
       '<p class="check" style="cursor:default">' + ic('lock').replace('class="ic"', 'class="ic" style="color:var(--blue);margin-top:0"') + '<span>Used only for this application. By continuing you agree to the privacy notice.</span></p>' +
-      '</div>' + side('Have these to hand', ticks(['Your company name and licence number', 'Roughly what you pay, and where', 'Your trade licence, a director’s ID and proof of address']));
+      '</div>' + side('Have these to hand', ticks(['Your company name and registration number', 'Roughly what you pay, and where', 'Your company registration document, a director’s ID and proof of address']));
   };
   S[1] = function () {
-    return head('Tell us about your company.', 'Just the basics, as they appear on your trade licence.') +
+    var p = prof(d.regCountry);
+    return head('Tell us about your company.', p.sub) +
       '<div class="row2">' + select('regCountry', 'Registered in', NAMES) + field('company', 'Company legal name', { auto: 'organization' }) + '</div>' +
-      '<div class="row2">' + field('licence', 'Licence or registration number') + field('website', 'Website (optional)', { ph: 'yourcompany.com', auto: 'url' }) + '</div>' +
-      group('legal', 'Legal form', chips('legal', ['Free zone company', 'Mainland LLC', 'Offshore', 'Other'])) +
+      '<div class="row2">' + field('licence', p.num) + field('website', 'Website (optional)', { ph: 'yourcompany.com', auto: 'url' }) + '</div>' +
+      group('legal', 'Legal form', chips('legal', p.legal)) +
       group('sector', 'What does the business do?', chips('sector', ['Metals and commodities', 'Watches and luxury goods', 'Logistics', 'Software', 'Something else'])) +
-      '</div>' + side('Where to find these', '<p>The name, number and legal form are all on the first page of your trade licence.</p>');
+      '</div>' + side('Where to find these', '<p>' + p.tip + '</p>');
   };
   S[2] = function () {
     return head('Where do you trade from?', 'The address your business actually works from.') +
       field('addr1', 'Building and street', { auto: 'address-line1' }) +
       '<div class="row2">' + field('area', 'Area (optional)', { auto: 'address-line2' }) + field('city', 'City', { auto: 'address-level2' }) + '</div>' +
-      '<div class="row2">' + select('addrCountry', 'Country', NAMES) + field('pobox', 'P.O. Box (optional)') + '</div>' +
-      '</div>' + side('Why we ask', '<p>Our banking partners need a trading address for every business. A P.O. Box on its own isn’t enough.</p>');
+      '<div class="row2">' + select('addrCountry', 'Country', NAMES) + field('pobox', prof(d.addrCountry).post) + '</div>' +
+      '</div>' + side('Why we ask', '<p>Our banking partners need a trading address for every business' + (/P\.O\./.test(prof(d.addrCountry).post) ? '. A P.O. Box on its own isn’t enough.' : ', not just a registered office.') + '</p>');
   };
-  var SERV = [['Stablecoins to local currency', 'USDT → AED', 'Turn USDT or USDC into money in a bank account.'], ['Local currency to stablecoins', 'AED → USDT', 'Send a bank transfer, receive stablecoins at your wallet.'], ['Pay suppliers directly', 'USDT → SUPPLIER', 'We pay your supplier in their currency, with your reference.']];
+  var servs = function () { var c = prof(d.regCountry).cur; return [['Stablecoins to local currency', 'USDT → ' + c, 'Turn USDT or USDC into money in a bank account.'], ['Local currency to stablecoins', c + ' → USDT', 'Send a bank transfer, receive stablecoins at your wallet.'], ['Pay suppliers directly', 'USDT → SUPPLIER', 'We pay your supplier in their currency, with your reference.']]; };
   S[3] = function () {
     return head('What do you need Delta Bridge for?', 'Pick everything that applies. You can change this later.') +
-      '<div class="' + bad('services').trim() + '"><div class="cards3">' + SERV.map(function (s) {
+      '<div class="' + bad('services').trim() + '"><div class="cards3">' + servs().map(function (s) {
         return '<button type="button" class="cardsel" data-chip="services" data-v="' + s[0] + '" aria-pressed="' + (d.services.indexOf(s[0]) > -1) + '"><small>' + s[1] + '</small><b>' + s[0] + '</b><span>' + s[2] + '</span></button>';
       }).join('') + '</div><div class="errline">Pick at least one.</div></div>' +
       '<div class="row2">' + group('coins', 'Which stablecoins?', chips('coins', ['USDT', 'USDC'])) + group('networks', 'On which networks?', chips('networks', ['Tron', 'Ethereum', 'Solana', 'Not sure yet'])) + '</div>' +
@@ -161,7 +181,7 @@
     return head('Roughly what will you move?', 'Estimates are fine. Nothing here is binding.') +
       '<div class="' + bad('payCountries').trim() + '"><span class="lbl">' + (out ? 'Which countries will you send from?' : 'Which countries do you pay into?') + '</span><div class="tags" id="tags">' + tagsHtml() +
       '<input id="tagin" type="text" placeholder="' + (d.payCountries.length ? 'Add another' : 'Start typing a country') + '" autocomplete="off" aria-label="Add a country"><div class="sugg" id="sugg"></div></div><div class="errline">Add at least one country.</div></div>' +
-      group('currencies', 'In which currencies?', chips('currencies', ['AED', 'EUR', 'GBP', 'USD']), 'Pick at least one.') +
+      group('currencies', 'In which currencies?', chips('currencies', [prof(d.regCountry).cur].concat(PAYOUT.filter(function (c) { return c !== prof(d.regCountry).cur; }))), 'Pick at least one.') +
       (out ? '' : group('payee', 'Who receives it?', chips('payee', ['Suppliers', 'Our own accounts', 'Both'], { seg: true }))) +
       '<div><span class="lbl">A typical payment (optional)</span><div class="money"><div class="inwrap f"><span>USD</span><input data-k="typical" inputmode="numeric" value="' + esc(d.typical) + '" aria-label="Typical payment in US dollars"></div>' +
       '<div class="chips">' + [['50k', '50,000'], ['100k', '100,000'], ['250k', '250,000'], ['500k', '500,000'], ['1m+', '1,000,000']].map(function (q) { return '<button type="button" class="chip" data-quick="' + q[1] + '" aria-pressed="' + (d.typical === q[1]) + '">' + q[0] + '</button>'; }).join('') + '</div></div></div>' +
@@ -188,7 +208,7 @@
       '</div>' + side('Why we ask', '<p>Banks need to know who ultimately owns a business and where its money comes from. One clear sentence is enough.</p>');
   };
   function docsHtml() {
-    return DOCS.map(function (x) {
+    return docsList().map(function (x) {
       var f = meta.files[x[0]];
       if (f && f.state === 'done') return '<div class="dz">' + ic('doc') + '<div><b>' + x[1] + '</b><small>' + esc(f.name) + ' · ' + size(f.size) + '</small></div><span><span class="st ok">Uploaded</span> <button type="button" class="linkb" data-pick="' + x[0] + '" style="font-size:13px;margin-left:10px">Replace</button></span></div>';
       if (f && f.state === 'busy') return '<div class="dz">' + ic('upload') + '<div><b>' + x[1] + '</b><small>Uploading ' + esc(f.name) + '</small></div><span class="st run">Sending</span></div>';
@@ -203,7 +223,7 @@
   };
   S[7] = function () {
     var cc = byCode[d.cc] || CC[0], owners = d.owners.filter(function (o) { return o.name.trim(); }).map(function (o) { return esc(o.name) + (o.pct ? ' ' + esc(o.pct) + '%' : ''); }).join(' · ');
-    var up = DOCS.filter(function (x) { return meta.files[x[0]] && meta.files[x[0]].state === 'done'; }).map(function (x) { return x[1]; });
+    var up = docsList().filter(function (x) { return meta.files[x[0]] && meta.files[x[0]].state === 'done'; }).map(function (x) { return x[1]; });
     var card = function (title, step, lines, wide) { return '<div' + (wide ? ' class="wide"' : '') + '><header><span>' + title + '</span><button type="button" class="linkb" data-edit="' + step + '" style="font-size:14px">Edit</button></header>' + lines.filter(Boolean).map(function (l) { return '<p>' + l + '</p>'; }).join('') + '</div>'; };
     return head('Check and send.', 'Everything you’ve told us. Edit anything before it goes.') +
       (sendError ? '<div class="banner" role="alert">' + sendError + '</div>' : '') +
@@ -340,7 +360,15 @@
     var t = e.target;
     if (t.id === 'file') { upload(t.getAttribute('data-kind'), t.files[0]); t.value = ''; return; }
     if (t.getAttribute('data-check')) { d[t.getAttribute('data-check')] = t.checked; return persist(); }
-    if (t.getAttribute('data-k') === 'cc') { d.cc = t.value; d.phone = fmtPhone(d.phone, d.cc); persist(); draw(); }
+    if (t.getAttribute('data-k') === 'cc') { d.cc = t.value; d.phone = fmtPhone(d.phone, d.cc); if (!d.company && !d.licence && !d.legal) { d.regCountry = d.addrCountry = byCode[d.cc][1]; prevReg = d.regCountry; } persist(); draw(); }
+    if (t.getAttribute('data-k') === 'regCountry') {
+      var before = prof(prevReg), now = prof(d.regCountry);
+      if (now.legal.indexOf(d.legal) < 0) d.legal = '';
+      if (!d.addr1 || d.addrCountry === prevReg) d.addrCountry = d.regCountry;
+      d.currencies = d.currencies.map(function (c) { return c === before.cur && d.currencies.indexOf(now.cur) < 0 ? now.cur : c; });
+      prevReg = d.regCountry; persist(); draw(); var s = app.querySelector('[data-k=regCountry]'); if (s) s.focus();
+    }
+    if (t.getAttribute('data-k') === 'addrCountry') { persist(); draw(); var s2 = app.querySelector('[data-k=addrCountry]'); if (s2) s2.focus(); }
   });
   app.addEventListener('click', function (e) {
     var t = e.target.closest('button, [data-pick]'); if (!t) return;
@@ -359,7 +387,7 @@
     else if (t.hasAttribute('data-rmowner')) { d.owners.splice(+a('data-rmowner'), 1); persist(); draw(); }
     else if (t.hasAttribute('data-pick')) { var f = document.getElementById('file'); f.setAttribute('data-kind', a('data-pick')); f.click(); }
     else if (t.hasAttribute('data-resume')) { view = 'form'; draw(true); }
-    else if (t.hasAttribute('data-restart')) { try { localStorage.removeItem(KEY); } catch (x) {} d = blank(); meta = { id: null, ref: null, step: 0, status: 'draft', files: {} }; view = 'form'; setSaved('idle'); draw(true); }
+    else if (t.hasAttribute('data-restart')) { try { localStorage.removeItem(KEY); } catch (x) {} d = blank(); prevReg = d.regCountry; meta = { id: null, ref: null, step: 0, status: 'draft', files: {} }; view = 'form'; setSaved('idle'); draw(true); }
     else if (t.hasAttribute('data-day')) { call.day = a('data-day'); draw(); }
     else if (t.hasAttribute('data-time')) { call.time = a('data-time'); draw(); }
     else if (t.hasAttribute('data-call') && call.day && call.time) {
@@ -388,7 +416,7 @@
     d = Object.assign(blank(), saved.d || {}); if (!Array.isArray(d.owners) || !d.owners.length) d.owners = blank().owners;
     meta = Object.assign({ id: null, ref: null, step: 0, status: 'draft', files: {} }, saved.meta || {});
     Object.keys(meta.files).forEach(function (k) { if (meta.files[k].state !== 'done') delete meta.files[k]; });
-    meta.step = Math.max(0, Math.min(7, meta.step | 0));
+    meta.step = Math.max(0, Math.min(7, meta.step | 0)); prevReg = d.regCountry;
   }
   var r = (new URLSearchParams(location.search).get('r') || '').toLowerCase(), stored = null;
   try { stored = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
